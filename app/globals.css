@@ -25,6 +25,14 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Safe area for notched / mobile browsers */
+.safe-area-inset-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
 /* Weighing flow diagram animations */
 @keyframes step-in {
   from {
