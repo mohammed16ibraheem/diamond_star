@@ -23,14 +23,35 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  /* Prevent horizontal overscroll on mobile */
+  overflow-x: hidden;
+  /* Smooth touch scrolling on iOS/Android */
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Safe area for notched / mobile browsers */
+/* Safe area for notched / mobile (iPhone, Android) */
 .safe-area-inset-top {
   padding-top: env(safe-area-inset-top, 0);
 }
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.safe-area-x {
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* Prevent long words from overflowing on small screens */
+.wrap-break-word {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Touch-friendly: remove 300ms tap delay and tap highlight on interactive elements */
+@media (hover: none) and (pointer: coarse) {
+  button, a, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 /* Modal on mobile: extra bottom padding above home indicator + smooth scroll */
@@ -130,6 +151,22 @@ body {
 .weighing-section:nth-of-type(1) { animation-delay: 0ms; }
 .weighing-section:nth-of-type(2) { animation-delay: 120ms; }
 .weighing-section:nth-of-type(3) { animation-delay: 240ms; }
+.weighing-section:nth-of-type(4) { animation-delay: 360ms; }
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .weighing-step,
+  .weighing-section,
+  .weighing-image-card,
+  .weighing-data-card {
+    animation: none;
+    opacity: 1;
+  }
+  .weighing-arrow,
+  .weighing-icon {
+    animation: none;
+  }
+}
 
 .weighing-image-card {
   opacity: 0;
@@ -151,5 +188,29 @@ body {
 @media (prefers-color-scheme: dark) {
   .weighing-table-row:hover {
     background-color: rgb(41 37 36 / 0.5);
+  }
+}
+
+/* Table: smooth horizontal scroll on mobile (iPhone/Android) */
+.weighing-table-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+@media (max-width: 639px) {
+  .weighing-table-scroll {
+    scrollbar-width: thin;
+  }
+}
+/* Sticky first column when table scrolls horizontally */
+.weighing-table-sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  box-shadow: 4px 0 8px -2px rgba(0, 0, 0, 0.06);
+}
+@media (prefers-color-scheme: dark) {
+  .weighing-table-sticky-col {
+    box-shadow: 4px 0 8px -2px rgba(0, 0, 0, 0.25);
   }
 }
