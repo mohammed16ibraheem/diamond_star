@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local commit fix temp files
+commit-msg-clean.txt
+msg.txt
+
+# local history/author fix scripts (optional)
+fix-commit-author.ps1
+rewrite-history.ps1
+rewrite-history.sh
+strip-coauthor.sh
