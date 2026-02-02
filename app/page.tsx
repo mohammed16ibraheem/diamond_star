@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useState } from "react";
 import {
   Truck,
   Hash,
@@ -10,6 +13,7 @@ import {
   ArrowRight,
   LayoutPanelTop,
   Table2,
+  X,
 } from "lucide-react";
 
 const FLOW_STEPS = [
@@ -21,6 +25,48 @@ const FLOW_STEPS = [
   { step: 6, title: "Save / Print", desc: "Record is saved", Icon: Save },
   { step: 7, title: "Truck leaves", desc: "Vehicle exits after record saved", Icon: LogOut },
 ];
+
+/** For each step: details in this section + what should be filled + which image shows it */
+const STEP_DETAILS: Record<
+  number,
+  { details: string[]; whatToFill: string; imageLabel: string }
+> = {
+  1: {
+    details: ["Vehicle at scale", "Ready for weighing"],
+    whatToFill: "No form fields yet – truck is just at the scale.",
+    imageLabel: "Brochure – Weighing System overview (0.jpg)",
+  },
+  2: {
+    details: ["Sr No"],
+    whatToFill: "Sr No – Serial number for this weighing (e.g. 9113). Assigned at top of form.",
+    imageLabel: "Data entry – where truck number & data are filled (1.jpg)",
+  },
+  3: {
+    details: ["Vehicle No", "Delivery Note No", "Party Code / Name", "Product Code / Name", "Trans. Code / Name", "First Weight", "First Date / Time", "Comments"],
+    whatToFill: "Vehicle No, Party (F5 for lookup), Product, Transporter, First Weight, First Date/Time. Optional: Delivery Note No, Comments.",
+    imageLabel: "Data entry (1.jpg), Party lookup F5 (3.jpg)",
+  },
+  4: {
+    details: ["2nd Weight", "2nd Date / Time"],
+    whatToFill: "2nd Weight and 2nd Date/Time – after load/unload. Left/right panel.",
+    imageLabel: "When the truck leaves the factory (2nd weight 4430, 1st 4820)",
+  },
+  5: {
+    details: ["Net Weight", "Quantity / Rate / Amount"],
+    whatToFill: "Net Weight (First − Second). Optionally Quantity, Rate per ton, Amount.",
+    imageLabel: "Record saved – full details stored (2.jpg)",
+  },
+  6: {
+    details: ["Record is saved", "Print"],
+    whatToFill: "Save the record. Print if needed. Status shows 'Record is saved'.",
+    imageLabel: "Record saved (2.jpg), When truck leaves (final screen)",
+  },
+  7: {
+    details: ["Flow: out ← 2 then 1", "Vehicle exits"],
+    whatToFill: "No extra fields. Truck leaves after 2nd weight then 1st weight recorded. See flow note: out ← 2 1.",
+    imageLabel: "When the truck leaves the factory",
+  },
+};
 
 const DATA_FIELDS = [
   { field: "Sr No", where: "Top of form", meaning: "Serial number for this weighing (e.g. 9113)" },
@@ -73,13 +119,73 @@ const IMAGES = [
 ];
 
 export default function Home() {
+  const [openStepId, setOpenStepId] = useState<number | null>(null);
+  const stepDetail = openStepId ? STEP_DETAILS[openStepId] : null;
+  const stepInfo = openStepId ? FLOW_STEPS.find((s) => s.step === openStepId) : null;
+
   return (
-    <div className="min-h-dvh w-full max-w-[100vw] bg-stone-100 dark:bg-stone-900 text-stone-900 dark:text-stone-100">
+    <div className="min-h-dvh w-full max-w-[100vw] overflow-x-hidden bg-stone-100 dark:bg-stone-900 text-stone-900 dark:text-stone-100">
       <header className="sticky top-0 z-10 border-b border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-3 sm:px-4 md:px-6 safe-area-inset-top">
         <div className="mx-auto w-full max-w-5xl">
           <h1 className="text-base font-bold sm:text-lg md:text-xl truncate">Weighing System – Flow & Data</h1>
         </div>
       </header>
+
+      {/* Step detail popup */}
+      {openStepId !== null && stepDetail && stepInfo && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] bg-black/50 backdrop-blur-sm"
+          onClick={() => setOpenStepId(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="step-modal-title"
+        >
+          <div
+            className="weighing-section step-modal-content relative w-full max-w-lg max-h-[90dvh] sm:max-h-[85vh] overflow-y-auto overflow-x-hidden rounded-t-2xl sm:rounded-xl border border-b-0 sm:border border-stone-200 dark:border-stone-600 bg-white dark:bg-stone-800 shadow-xl p-4 sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setOpenStepId(null)}
+              className="absolute top-3 right-3 p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-stone-500 hover:bg-stone-200 dark:hover:bg-stone-600 hover:text-stone-800 dark:hover:text-stone-200 active:scale-95 transition-colors touch-manipulation"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5 shrink-0" />
+            </button>
+            <h3 id="step-modal-title" className="text-base sm:text-lg font-semibold text-amber-600 dark:text-amber-400 pr-12 sm:pr-10 wrap-break-word">
+              Step {stepInfo.step}: {stepInfo.title}
+            </h3>
+            <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 mt-1 wrap-break-word">{stepInfo.desc}</p>
+
+            <div className="mt-4 space-y-3">
+              <div>
+                <h4 className="text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400 mb-1.5">
+                  In this section – details
+                </h4>
+                <ul className="list-disc list-inside text-xs sm:text-sm text-stone-700 dark:text-stone-300 space-y-0.5 wrap-break-word">
+                  {stepDetail.details.map((d, idx) => (
+                    <li key={idx}>{d}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400 mb-1.5">
+                  What should be filled
+                </h4>
+                <p className="text-xs sm:text-sm text-stone-700 dark:text-stone-300 wrap-break-word">{stepDetail.whatToFill}</p>
+              </div>
+              <div>
+                <h4 className="text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-stone-500 dark:text-stone-400 mb-1.5">
+                  See screen (based on image data)
+                </h4>
+                <p className="text-[11px] sm:text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded px-2 py-1.5 wrap-break-word">
+                  {stepDetail.imageLabel}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="mx-auto w-full max-w-5xl px-3 py-6 sm:px-4 sm:py-8 md:px-6 space-y-8 sm:space-y-12 pb-safe">
         {/* Diagram: what is happening – icons + animated flow */}
@@ -88,15 +194,17 @@ export default function Home() {
             <span className="text-amber-600 dark:text-amber-400">What is happening (flow)</span>
           </h2>
           <p className="text-stone-600 dark:text-stone-400 text-xs sm:text-sm mb-4 sm:mb-6 leading-relaxed">
-            First the truck comes → it gets a number (Sr No) → then weight and details are filled → optionally second weight → net weight → save → truck leaves.
+            First the truck comes → it gets a number (Sr No) → then weight and details are filled → optionally second weight → net weight → save → truck leaves. Click a step to see details and what to fill.
           </p>
           <div className="flex flex-wrap items-stretch justify-center sm:justify-start gap-2 sm:gap-2">
             {FLOW_STEPS.map((item, i) => {
               const StepIcon = item.Icon;
               return (
                 <div key={item.step} className="flex items-center gap-1 sm:gap-2">
-                  <div
-                    className="weighing-step flex flex-col items-center min-w-[88px] sm:min-w-[120px] md:min-w-[130px] rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-3 sm:p-4 text-center shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-300"
+                  <button
+                    type="button"
+                    onClick={() => setOpenStepId(item.step)}
+                    className="weighing-step flex flex-col items-center min-w-[88px] sm:min-w-[120px] md:min-w-[130px] min-h-[72px] sm:min-h-0 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-3 sm:p-4 text-center shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 dark:focus:ring-offset-stone-800 touch-manipulation"
                     style={{ animationDelay: `${i * 80}ms` }}
                   >
                     <span className="weighing-icon mb-1.5 sm:mb-2 inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-amber-200/80 dark:bg-amber-800/50 text-amber-700 dark:text-amber-300">
@@ -105,7 +213,7 @@ export default function Home() {
                     <span className="text-[10px] sm:text-xs font-medium text-amber-700 dark:text-amber-400">Step {item.step}</span>
                     <span className="text-xs sm:text-sm font-semibold mt-0.5 leading-tight">{item.title}</span>
                     <span className="text-[10px] sm:text-xs text-stone-600 dark:text-stone-400 mt-0.5 sm:mt-1 line-clamp-2">{item.desc}</span>
-                  </div>
+                  </button>
                   {i < FLOW_STEPS.length - 1 && (
                     <span
                       className="weighing-arrow text-amber-500 dark:text-amber-400 self-center hidden sm:flex items-center shrink-0"
@@ -124,7 +232,7 @@ export default function Home() {
         <section className="weighing-section bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-4 sm:p-6 shadow-sm">
           <h2 className="text-base font-semibold sm:text-lg mb-2 flex items-center gap-2">
             <LayoutPanelTop className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span className="break-words">Screens – where truck and data are filled</span>
+            <span className="wrap-break-word">Screens – where truck and data are filled</span>
           </h2>
           <p className="text-stone-600 dark:text-stone-400 text-xs sm:text-sm mb-4 sm:mb-6">
             The images below show where the truck gets its number, where weight is entered, and where party/product details are filled.
@@ -143,8 +251,8 @@ export default function Home() {
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 1024px"
                   />
                 </div>
-                <p className="text-xs sm:text-sm font-medium break-words">{img.label}</p>
-                <p className="text-[10px] sm:text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded px-2 py-1 inline-block break-words max-w-full">
+                <p className="text-xs sm:text-sm font-medium wrap-break-word">{img.label}</p>
+                <p className="text-[10px] sm:text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded px-2 py-1 inline-block wrap-break-word max-w-full">
                   {img.highlight}
                 </p>
                 {"dataFromScreen" in img && img.dataFromScreen && (
@@ -222,7 +330,7 @@ export default function Home() {
                   <tr key={row.field} className="weighing-table-row border-b border-stone-100 dark:border-stone-700/50">
                     <td className="py-2 pr-2 sm:pr-4 font-medium whitespace-nowrap">{row.field}</td>
                     <td className="py-2 pr-2 sm:pr-4 text-stone-600 dark:text-stone-400">{row.where}</td>
-                    <td className="py-2 text-stone-600 dark:text-stone-400 break-words">{row.meaning}</td>
+                    <td className="py-2 text-stone-600 dark:text-stone-400 wrap-break-word">{row.meaning}</td>
                   </tr>
                 ))}
               </tbody>
